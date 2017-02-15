@@ -1,8 +1,6 @@
 from PIL import Image
 import argparse
-#import ctypes
 import random
-#import getopt
 import time
 import math
 import sys
@@ -40,7 +38,6 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
         print ""
 
 
-# Todo: add support of padding around mosaics?
 def createImageWall(tiles, resolution, imgFiles, imgSize, crop=False):
     barLength = 40  # length of progress bar
     wTile, hTile = tiles
@@ -58,7 +55,6 @@ def createImageWall(tiles, resolution, imgFiles, imgSize, crop=False):
                 scale = (1.0*wMoselNew)/img.size[0]
                 wMoselNewCrop = int(scale*img.size[0])
                 hMoselNewCrop = int(scale*img.size[1])
-                # todo: add padding to crop image
                 img = img.resize(
                     (wMoselNewCrop, hMoselNewCrop), Image.ANTIALIAS)
                 img = img.crop((0, 0, wMoselNew, hMoselNew))
@@ -123,8 +119,6 @@ moselDir = args['inputPath']
 hTotal = args['outputHeight']
 outputFilename = args['outputFilename']
 pickImages = args['pickImages']
-#wallAspectRatio = args['wallAspectRatio']
-#moselAspectRatio = args['moselAspectRatio']
 
 # check that it is ending with pathsep
 imgFiles = getFilesFromDir(moselDir, pickImages)
@@ -136,7 +130,6 @@ if verbose:
 
 # sanity check images:
 for file in imgFiles:
-
     try:
         img = Image.open(file)
         img = img.resize((3, 3), Image.ANTIALIAS)
@@ -163,8 +156,6 @@ img = Image.open(imgFiles[1])
 wMosel, hMosel = img.size
 hMoselNew = math.floor(hTotal/hTile)
 ratio = (1.0*wMosel)/hMosel
-# if aspectRatio is not None:  # overriding mosel aspect ratio
-#   ratio = aspectRatio
 wMoselNew = int(hMoselNew*ratio)
 hMoselNew = int(hMoselNew)
 
@@ -175,10 +166,6 @@ if verbose:
     print " tiling: {}x{}".format(wTile, hTile)
 
 wTotal = wMoselNew*wTile  # int(math.floor(ratio*hTotal))
-
-# todo: warning if RAM is low
-# psutil.virtual_memory()
-
 diff = int(math.fabs(wTile*hTile - len(imgFiles)))
 
 if hMoselNew > hMosel:
@@ -192,8 +179,6 @@ if diff != 0:  # otherwise it is perfect
         print(
             "Warning: not optimal tiling, {} images are missing.".format(diff))
 
-# tiles = (wTile, hTile)
-# resolution = (wTotal, hTotal)
 imgSize = (wMoselNew, hMoselNew)
 imageWall = createImageWall(
     (wTile, hTile), (wTotal, hTotal), imgFiles, imgSize, crop)
