@@ -136,7 +136,6 @@ for file in imgFiles:
     except:
         print "An error occured in reading {}".format(file)
         imgFiles.remove(file)
-        # continue
 
 if verbose:
     print "number of images: {}".format(len(imgFiles))
@@ -151,7 +150,6 @@ hTile = int(math.ceil(math.sqrt(len(imgFiles))))
 
 # lower number of tiles given number of images
 wTile = int(math.floor(len(imgFiles)/hTile))
-# given aspectRatio how do we get tiles?
 img = Image.open(imgFiles[1])
 wMosel, hMosel = img.size
 hMoselNew = math.floor(hTotal/hTile)
