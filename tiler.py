@@ -116,6 +116,11 @@ def main():
     parser.add_argument("--repeat",
                         help="how many times to perform the mosaicing",
                         type=int, required=False)
+    
+    parser.add_argument("--repeatAll",
+                        help="repeat until all images are shown, will override repeat and randomness",
+                        type=bool, required=False)
+        
     args = vars(parser.parse_args())
     crop = args['crop']
     repeat = args['repeat']
@@ -125,13 +130,28 @@ def main():
     hTotal = args['outputHeight']
     outputFilename = args['outputFilename']
     pickImages = args['pickImages']
+    repeatAll = args['repeatAll']
+
+    if repeatAll:
+        randomize = False
+
+    imgFiles = getFilesFromDir(moselDir, pickImages)
+
+    if repeatAll:
+        imgFiles = getFilesFromDir(moselDir, -1)
+        number_of_files = len(imgFiles)
+        repeat = int(number_of_files/pickImages)
 
     if repeat>1:
         print 'Repeating mosaicing {} times.'.format(repeat)
+
     for rep in range(0, repeat):
 
-        # check that it is ending with pathsep
-        imgFiles = getFilesFromDir(moselDir, pickImages)
+        # pick images until all have been consumed
+        if repeatAll:
+            imgFiles = getFilesFromDir(moselDir, -1)
+            imgFiles = imgFiles[(rep*pickImages):(rep+1)*pickImages]
+
         if len(imgFiles) == 0:
             raise ValueError("No files found")
 
@@ -139,13 +159,13 @@ def main():
             print "sanity checking images..."
 
         # sanity check images:
-        for file in imgFiles:
-            try:
-                img = Image.open(file)
-                img = img.resize((3, 3), Image.ANTIALIAS)
-            except:
-                print "An error occured in reading {}".format(file)
-                imgFiles.remove(file)
+        # for file in imgFiles:
+        #     try:
+        #         img = Image.open(file)
+        #         img = img.resize((3, 3), Image.ANTIALIAS)
+        #     except:
+        #         print "An error occured in reading {}".format(file)
+        #         imgFiles.remove(file)
 
         if verbose:
             print "number of images: {}".format(len(imgFiles))
