@@ -73,6 +73,8 @@ def createImageWall(tiles, resolution, imgFiles, imgSize, crop=False):
 def getFilesFromDir(path, nFiles):
     from os import walk
     files = []
+    if nFiles == -1:
+        nFiles = sys.maxint
     for (path, dirnames, filenames) in walk(path):
         for filename in filenames:
             if len(files) < nFiles and filename.endswith('.jpg'):
@@ -111,9 +113,12 @@ def main():
     parser.add_argument("--moselAspectRatio",
                         help="specify aspect ratio of mosaic elements",
                         type=float, required=False)
-
+    parser.add_argument("--repeat",
+                        help="how many times to perform the mosaicing",
+                        type=int, required=False)
     args = vars(parser.parse_args())
     crop = args['crop']
+    repeat = args['repeat']
     randomize = args['r']
     verbose = args['v']
     moselDir = args['inputPath']
@@ -121,71 +126,81 @@ def main():
     outputFilename = args['outputFilename']
     pickImages = args['pickImages']
 
-    # check that it is ending with pathsep
-    imgFiles = getFilesFromDir(moselDir, pickImages)
-    if len(imgFiles) == 0:
-        raise ValueError("No files found")
+    if repeat>1:
+        print 'Repeating mosaicing {} times.'.format(repeat)
+    for rep in range(0, repeat):
 
-    if verbose:
-        print "sanity checking images..."
+        # check that it is ending with pathsep
+        imgFiles = getFilesFromDir(moselDir, pickImages)
+        if len(imgFiles) == 0:
+            raise ValueError("No files found")
 
-    # sanity check images:
-    for file in imgFiles:
-        try:
-            img = Image.open(file)
-            img = img.resize((3, 3), Image.ANTIALIAS)
-        except:
-            print "An error occured in reading {}".format(file)
-            imgFiles.remove(file)
-
-    if verbose:
-        print "number of images: {}".format(len(imgFiles))
-
-    if randomize:
         if verbose:
-            print "shuffling images"
-        random.shuffle(imgFiles)
+            print "sanity checking images..."
 
-    sqrtLen = math.sqrt(len(imgFiles))
-    hTile = int(math.ceil(math.sqrt(len(imgFiles))))
+        # sanity check images:
+        for file in imgFiles:
+            try:
+                img = Image.open(file)
+                img = img.resize((3, 3), Image.ANTIALIAS)
+            except:
+                print "An error occured in reading {}".format(file)
+                imgFiles.remove(file)
 
-    # lower number of tiles given number of images
-    wTile = int(math.floor(len(imgFiles)/hTile))
-    img = Image.open(imgFiles[1])
-    wMosel, hMosel = img.size
-    hMoselNew = math.floor(hTotal/hTile)
-    ratio = (1.0*wMosel)/hMosel
-    wMoselNew = int(hMoselNew*ratio)
-    hMoselNew = int(hMoselNew)
+        if verbose:
+            print "number of images: {}".format(len(imgFiles))
 
-    if verbose:
-        print " original mosel size: {}x{}".format(wMosel, hMosel)
-        print " calculated mosel size: {}x{}".format(wMoselNew, hMoselNew)
-        print " ratio: {}".format(ratio)
-        print " tiling: {}x{}".format(wTile, hTile)
+        if randomize:
+            if verbose:
+                print "shuffling images"
+            imgFiles = getFilesFromDir(moselDir, -1)
+            random.shuffle(imgFiles)
+            imgFiles = imgFiles[0:pickImages]
 
-    wTotal = wMoselNew*wTile  # int(math.floor(ratio*hTotal))
-    diff = int(math.fabs(wTile*hTile - len(imgFiles)))
+        sqrtLen = math.sqrt(len(imgFiles))
+        hTile = int(math.ceil(math.sqrt(len(imgFiles))))
 
-    if hMoselNew > hMosel:
-        print("Warning: Mosels are resized to be larger than the source.")
+        # lower number of tiles given number of images
+        wTile = int(math.floor(len(imgFiles)/hTile))
+        img = Image.open(imgFiles[1])
+        wMosel, hMosel = img.size
+        hMoselNew = math.floor(hTotal/hTile)
+        ratio = (1.0*wMosel)/hMosel
+        wMoselNew = int(hMoselNew*ratio)
+        hMoselNew = int(hMoselNew)
 
-    if diff != 0:  # otherwise it is perfect
-        if len(imgFiles) > wTile*hTile:
-            print(
-                "Warning: not optimal tiling. {} images were not picked".format(diff))
+        if verbose:
+            print " original mosel size: {}x{}".format(wMosel, hMosel)
+            print " calculated mosel size: {}x{}".format(wMoselNew, hMoselNew)
+            print " ratio: {}".format(ratio)
+            print " tiling: {}x{}".format(wTile, hTile)
+
+        wTotal = wMoselNew*wTile  # int(math.floor(ratio*hTotal))
+        diff = int(math.fabs(wTile*hTile - len(imgFiles)))
+
+        if hMoselNew > hMosel:
+            print("Warning: Mosels are resized to be larger than the source.")
+
+        if diff != 0:  # otherwise it is perfect
+            if len(imgFiles) > wTile*hTile:
+                print(
+                    "Warning: not optimal tiling. {} images were not picked".format(diff))
+            else:
+                print(
+                    "Warning: not optimal tiling, {} images are missing.".format(diff))
+
+        imgSize = (wMoselNew, hMoselNew)
+        imageWall = createImageWall(
+            (wTile, hTile), (wTotal, hTotal), imgFiles, imgSize, crop)
+
+        sys.stdout.write("saving image...")
+        sys.stdout.flush()
+
+        if repeat > 1:
+            imageWall.save(outputFilename.replace('.png', '_' + str(rep)+'.png'))
         else:
-            print(
-                "Warning: not optimal tiling, {} images are missing.".format(diff))
-
-    imgSize = (wMoselNew, hMoselNew)
-    imageWall = createImageWall(
-        (wTile, hTile), (wTotal, hTotal), imgFiles, imgSize, crop)
-
-    sys.stdout.write("saving image...")
-    sys.stdout.flush()
-    imageWall.save(outputFilename)
-    sys.stdout.write("done.")
+            imageWall.save(outputFilename)
+        sys.stdout.write("done.")
 
 
 if __name__ == '__main__':
