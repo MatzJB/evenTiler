@@ -150,6 +150,7 @@ def main():
     allFiles = getFilesFromDir(moselDir, -1)
     allFiles.sort(key=natural_keys)
     imgFiles = allFiles 
+    
     if repeatAll:
         imgFiles = allFiles
         number_of_files = len(imgFiles)
