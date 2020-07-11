@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "tables",
+            "args": [
+                "-i", "C:\\temp\\loteria_export\\",
+                "-o", "c:\\temp\\Lotría table.png",
+                "--outputHeight", "3000",
+                "--pickImages", "16",
+                "--repeat", "20",
+                "-r"
+            ],
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "cards",
+            "args": [
+                "-i", "C:\\temp\\loteria_export\\",
+                "-o", "c:\\temp\\Lotría map.png",
+                "--outputHeight", "3000",
+                "--repeatAll", "true"
+            ],
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        }
+    ]
+}

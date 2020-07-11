@@ -6,7 +6,7 @@ import math
 import sys
 import os
 from random import randint
-
+import re
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True  # fixes issues with some images
 
@@ -36,6 +36,18 @@ def printProgressBar(iteration, total, prefix='', suffix='', decimals=1, length=
     # Print New Line on Complete
     if iteration == total:
         print ""
+
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+    '''
+    alist.sort(key=natural_keys) sorts in human order
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    (See Toothy's implementation in the comments)
+    '''
+    return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
 
 
 def createImageWall(tiles, resolution, imgFiles, imgSize, crop=False):
@@ -135,10 +147,11 @@ def main():
     if repeatAll:
         randomize = False
 
-    imgFiles = getFilesFromDir(moselDir, pickImages)
-
+    allFiles = getFilesFromDir(moselDir, -1)
+    allFiles.sort(key=natural_keys)
+    imgFiles = allFiles 
     if repeatAll:
-        imgFiles = getFilesFromDir(moselDir, -1)
+        imgFiles = allFiles
         number_of_files = len(imgFiles)
         repeat = int(number_of_files/pickImages)
 
@@ -149,7 +162,7 @@ def main():
 
         # pick images until all have been consumed
         if repeatAll:
-            imgFiles = getFilesFromDir(moselDir, -1)
+            imgFiles = allFiles
             imgFiles = imgFiles[(rep*pickImages):(rep+1)*pickImages]
 
         if len(imgFiles) == 0:
@@ -173,7 +186,7 @@ def main():
         if randomize:
             if verbose:
                 print "shuffling images"
-            imgFiles = getFilesFromDir(moselDir, -1)
+            imgFiles = allFiles
             random.shuffle(imgFiles)
             imgFiles = imgFiles[0:pickImages]
 
